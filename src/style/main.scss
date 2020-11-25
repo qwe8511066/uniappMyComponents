@@ -1,0 +1,63 @@
+
+.flexMain {
+  -webkit-box-flex: 1;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.myContent{
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+.height100{
+  height: 100vh;
+}
+
+.flexBox {
+  display: -webkit-box;
+} 
+.flex1 {
+  -webkit-box-flex: 1;
+  display: block;
+  width: 100%
+}
+
+.flexContent {
+  -webkit-box-pack: center;
+  -webkit-box-align: center;
+  display: -webkit-box;
+}
+
+.flexLeftContent {
+  -webkit-box-pack: initial;
+  -webkit-box-align: center;
+  display: -webkit-box;
+}
+
+.flexRightContent {
+  -webkit-box-pack: initial;
+  -webkit-box-align: center;
+  display: -webkit-box;
+}
+.flexEnd{
+  -webkit-box-pack: initial;
+  -webkit-box-align: end;
+  display: -webkit-box;
+}
+
+.flexCloumn {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.textCenter {
+  text-align: center
+}
+.textLeft {
+  text-align: left
+}

@@ -1,5 +1,15 @@
-import env from './env'
-import * as redis from '@/utils/redis'
+
+import {
+    getToken,
+    removeToken,
+    setToken
+} from '@/utils/auth'
+
+import {
+    checkObjectString
+} from '@/utils/index'
+
+
 import Fly from 'flyio/dist/npm/wx';
 
 // 常见的http状态码信息
@@ -15,64 +25,77 @@ let httpCode = {
 
 // 引入 fly
 const fly = new Fly();
-const newFly = new Fly();
 
 // 设置请求基地址
-fly.config.baseURL = env.API_HOST
+fly.config.baseURL = process.env.VUE_APP_SERVE_URL
 // 设置超时时间
-fly.config.timout = 5000
+fly.config.timout = 25000
 
-// 设置请求基地址
-newFly.config.baseURL = env.API_HOST
-// 设置超时时间
-newFly.config.timout = 5000
 
 // 请求拦截
 fly.interceptors.request.use(request => {
-    console.log(`发起请求：path:${request.url}，baseURL:${request.baseURL}`)
-    // 开启加载动画
-    uni.showLoading({
-        title: '努力加载中~',
-        mask: true
-    })
     // 添加编码
     request.headers['content-type'] = 'application/json;charset=UTF-8'
     // 获取token,放入头中
-    let token = redis.get('token');
+    let token = getToken()
     if (token) {
-        request.headers['Authorization'] = `bearer ${token}`;
+        request.headers['Authorization'] = `Bearer ${token}`;
     } else {
-        // 如果不是登陆方法，则需要拦截
-        if (request.url != '/login') {
-            console.log("没有token，先请求token...");
-            fly.lock()
-            return newFly.get("/token").then(res => {
-                request.headers["Authorization"] = res.data.data.token;
-                redis.set('token', res.data.data.token);
-                log("token请求成功，值为: " + res.data.data.token);
-                log(`继续完成请求：path:${request.url}，baseURL:${request.baseURL}`)
-                return request; //只有最终返回request对象时，原来的请求才会继续
-            }).finally(() => {
-                fly.unlock(); //解锁后，会继续发起请求队列中的任务，详情见后面文档
-            })
-        }
+
     }
     return request;
-});
+},
+    error => {
+        return Promise.reject(error);
+    });
 
 // 响应拦截
 fly.interceptors.response.use(
     response => {
-        //关闭加载动画
-        uni.hideLoading()
-        return response.data
+        const res = response.data;
+
+        if (res.code != 0) {
+            const message = res.msg ? res.msg : "服务器错误";
+            uni.showToast(message);
+            return Promise.reject(new Error(message || "Error"));
+        } else {
+            return res && res.data ? res.data : res;
+        }
     },
     error => {
-        //关闭加载动画
-        uni.hideLoading()
-        // 根据请求失败的http状态码去给用户相应的提示
-        tips = error.status in httpCode ? httpCode[error.status] : error.message
-        uni.showToast({title: tips, icon: "none"});
+        const data = {
+            error
+        };
+        const value = checkObjectString(data, "error.response.data.error.message");
+        const message = value ? value : data.error.message;
+
+        //请求超时
+        if (data.error.code === "ECONNABORTED") {
+            uni.showToast("请求超时了！请联系管理员");
+            return Promise.reject(error);
+        }
+        // 判断有返回才继续检测错误
+        if (data.error.response) {
+            switch (data.error.response.status) {
+                case 401:
+                    removeToken()
+                    uni.redirectTo({
+                        url: `/pages/login/index`,
+                    })
+                    uni.showToast("用户未登录");
+                    break;
+                case 404:
+                    uni.showToast("暂无该接口，请查看");
+                    break;
+
+                default:
+                    uni.showToast(message);
+                    break;
+            }
+        } else {
+            uni.showToast(message);
+        }
+        return Promise.reject(error);
     }
 )
 

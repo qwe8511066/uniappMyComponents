@@ -67,6 +67,9 @@
     },
     "usingComponents": true
   },
+  "publicPages": {
+    "usingComponents": true
+  },
   "mp-alipay": {
     "usingComponents": true
   },
