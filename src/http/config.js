@@ -1,8 +1,7 @@
 
 import {
     getToken,
-    removeToken,
-    setToken
+    removeToken
 } from '@/utils/auth'
 
 import {

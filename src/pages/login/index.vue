@@ -62,9 +62,6 @@ export default {
               uni.hideLoading()
             }
           )
-          console.log('验证通过')
-        } else {
-          console.log('验证失败')
         }
       })
     },
@@ -73,6 +70,8 @@ export default {
   // 必须要在onReady生命周期，因为onLoad生命周期组件可能尚未创建完毕
   onReady() {
     this.$refs.uForm.setRules(this.rules)
+  },
+  onShow() {
     wx.hideHomeButton()
   },
 }
