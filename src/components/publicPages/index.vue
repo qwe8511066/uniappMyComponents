@@ -5,58 +5,97 @@
       :show-down-success="true"
       :back-top="true"
       :pullDown="pullDown"
-      :pullUp="loadData"
+      :pullUp="getList"
+      :backTop="backTop"
     >
-      <ul>
-        <li
-          v-for="(item,index) of list"
-          :key="index"
-          style="font-size:30rpx;padding:40rpx;text-align:center;border-bottom:1px solid #aaa"
-        >{{item}}</li>
-      </ul>
+      <div>
+        <u-input v-model="myPages.keyword" type="text" border />
+        <slot :data="data"></slot>
+      </div>
     </sPullScroll>
   </section>
 </template>
 
 <script>
 import sPullScroll from './sPullScroll'
+import { checkArrayString, getMultistage } from '@/utils/index'
 export default {
   name: 'publicPages',
   components: {
     sPullScroll,
   },
+  props: {
+    //列表请求的url
+    listServe: {
+      type: String,
+      default: '',
+    },
+    listServeMethod: {
+      type: String,
+      default: 'POST',
+    },
+    //基本参数
+    baseParams: {
+      type: Object,
+      default: function () {
+        return {}
+      },
+    },
+    backTop: {
+      type: Boolean,
+      default: true,
+    },
+    myPages: {
+      type: Object,
+      default: function () {
+        return {}
+      },
+    },
+  },
   data() {
     return {
-      list: [],
+      // 传给后台的分页
+      page: {
+        // 每页条数
+        pageSize: 10,
+      },
+
+      data: [],
+      timer: null,
     }
   },
   methods: {
     refresh() {
       this.$nextTick(() => {
+        console.log('refresh')
         this.$refs.pullScroll.refresh()
       })
     },
     pullDown(pullScroll) {
-      setTimeout(() => {
-        this.loadData(pullScroll)
-      }, 200)
+      this.data = []
+      this.getList(pullScroll)
     },
-    loadData(pullScroll) {
-      setTimeout(() => {
-        if (pullScroll.page == 1) {
-          this.list = []
-        }
-        const curList = []
-        for (let i = this.list.length; i < this.list.length + 20; i++) {
-          curList.push(i)
-        }
-        this.list = this.list.concat(curList)
-        if (this.list.length > 60) {
+    getList(pullScroll) {
+      this.page = Object.assign({}, this.page, this.myPages)
+      this.page = Object.assign({}, this.page, this.baseParams)
+      this.page.page = pullScroll.page
+      this.loading = true
+      this.$http[this.listServeMethod.toLowerCase()](
+        this.listServe,
+        this.page
+      ).then((data) => {
+        const value = getMultistage(data, 'list')
+        let totalCount = getMultistage(data, 'totalCount')
+        totalCount = totalCount ? totalCount : 0
+        value.forEach((element) => {
+          this.data.push(element)
+        })
+        if (this.data.length >= totalCount) {
           pullScroll.finish()
         } else {
           pullScroll.success()
         }
-      }, 500)
+      })
     },
   },
   mounted() {

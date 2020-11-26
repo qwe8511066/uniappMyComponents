@@ -55,7 +55,10 @@ fly.interceptors.response.use(
 
         if (res.code != 0) {
             const message = res.msg ? res.msg : "服务器错误";
-            uni.showToast(message);
+            uni.showToast({
+                title: message,
+                icon: 'none',
+            })
             return Promise.reject(new Error(message || "Error"));
         } else {
             return res && res.data ? res.data : res;
@@ -70,7 +73,11 @@ fly.interceptors.response.use(
 
         //请求超时
         if (data.error.code === "ECONNABORTED") {
-            uni.showToast("请求超时了！请联系管理员");
+            uni.showToast({
+                title: "请求超时了！请联系管理员",
+                icon: 'none',
+            })
+
             return Promise.reject(error);
         }
         // 判断有返回才继续检测错误
@@ -81,18 +88,30 @@ fly.interceptors.response.use(
                     uni.redirectTo({
                         url: `/pages/login/index`,
                     })
-                    uni.showToast("用户未登录");
+                    uni.showToast({
+                        title: "用户未登录",
+                        icon: 'none',
+                    })
                     break;
                 case 404:
-                    uni.showToast("暂无该接口，请查看");
+                    uni.showToast({
+                        title: "暂无该接口，请查看",
+                        icon: 'none',
+                    })
                     break;
 
                 default:
-                    uni.showToast(message);
+                    uni.showToast({
+                        title: message,
+                        icon: 'none',
+                    })
                     break;
             }
         } else {
-            uni.showToast(message);
+            uni.showToast({
+                title: message,
+                icon: 'none',
+            })
         }
         return Promise.reject(error);
     }
